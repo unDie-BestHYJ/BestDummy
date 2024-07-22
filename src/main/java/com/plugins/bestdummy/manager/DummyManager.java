@@ -3,12 +3,10 @@ package com.plugins.bestdummy.manager;
 import com.plugins.bestdummy.BestDummy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
@@ -40,6 +38,7 @@ public class DummyManager {
 
         this.dummyTeam = scoreboard.getTeam("dummies");
         if (this.dummyTeam == null) {
+            Bukkit.getLogger().info("已注册新Team dummies");
             this.dummyTeam = scoreboard.registerNewTeam("dummies");
         }
 
@@ -60,35 +59,27 @@ public class DummyManager {
 
     public void loadDummies() {
         if (dummiesConfig.contains("dummies")) {
-            for (String key : dummiesConfig.getConfigurationSection("dummies").getKeys(false)) {
-                String world = dummiesConfig.getString("dummies." + key + ".world");
-                double x = dummiesConfig.getDouble("dummies." + key + ".x");
-                double y = dummiesConfig.getDouble("dummies." + key + ".y");
-                double z = dummiesConfig.getDouble("dummies." + key + ".z");
+            for (String dummyName : dummiesConfig.getConfigurationSection("dummies").getKeys(false)) {
+                String world = dummiesConfig.getString("dummies." + dummyName + ".world");
+                double x = dummiesConfig.getDouble("dummies." + dummyName + ".x");
+                double y = dummiesConfig.getDouble("dummies." + dummyName + ".y");
+                double z = dummiesConfig.getDouble("dummies." + dummyName + ".z");
 
-                // 创建一个 Location 对象，指定假人将要生成的位置
                 Location loc = new Location(Bukkit.getWorld(world), x, y, z);
-                // 在指定位置生成一个 ArmorStand 实体，并将其强制转换为 ArmorStand 类型
                 ArmorStand dummy = (ArmorStand) loc.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
-                // 设置假人的自定义名称
-                dummy.setCustomName(key);
-                // 设置假人名称在玩家视野中可见
+                dummy.setCustomName(dummyName);
                 dummy.setCustomNameVisible(true);
-                // 设置假人不可见（即隐藏其身体）
                 dummy.setVisible(false);
-                // 设置假人无敌（即不会受到伤害）
                 dummy.setInvulnerable(true);
-                // 取消假人的重力效果（即不会受到重力影响）
                 dummy.setGravity(false);
-                // 取消假人的基座（即底座板）显示
                 dummy.setBasePlate(false);
-                // 取消假人的手臂显示（即不显示手臂）
                 dummy.setArms(false);
 
                 dummies.add(dummy);
+                Bukkit.getLogger().info("已加载假人: " + dummy.getCustomName());
                 dummyTeam.addEntry(dummy.getCustomName());
 
-                updatePlayerCount(key);
+                updateDummyAndPlayerCount(dummyName);
             }
         }
     }
@@ -117,8 +108,40 @@ public class DummyManager {
         dummyOwners.put(dummy, playerName);
 
         saveDummyInfo(dummy, loc, playerName);
-        updatePlayerCount(id);
+        updateDummyAndPlayerCount(id);
         return dummy;
+    }
+
+    public boolean removeDummy(String id) {
+        ArmorStand dummyToRemove = null;
+        for (ArmorStand dummy : dummies) {
+            if (dummy.getCustomName().equals(id)) {
+                dummyToRemove = dummy;
+                break;
+            }
+        }
+
+        if (dummyToRemove != null) {
+            dummyToRemove.remove();
+            dummies.remove(dummyToRemove);
+            dummyTeam.removeEntry(id);
+            dummiesConfig.set("dummies." + id, null);
+            saveDummiesConfig();
+            updateDummyAndPlayerCount(null);
+            return true;
+        }
+        return false;
+    }
+
+    public void removeAllDummies() {
+        for (ArmorStand dummy : dummies) {
+            dummy.remove();
+        }
+        dummies.clear();
+        dummyTeam.getEntries().clear();
+        dummiesConfig.set("dummies", null);
+        saveDummiesConfig();
+        updateDummyAndPlayerCount(null);
     }
 
     private void saveDummyInfo(ArmorStand dummy, Location loc, String playerName) {
@@ -139,29 +162,21 @@ public class DummyManager {
         }
     }
 
-    private void updatePlayerCount(String dummyName) {
+    private void updateDummyAndPlayerCount(String dummyName) {
         new BukkitRunnable() {
             @Override
             public void run() {
-                // 获取当前假人的数量
                 int dummyCount = dummies.size();
+                dummyTeam.setPrefix("假人 " + dummyCount + " ");
 
-                // 更新假人名称显示在 Tab 列表中的计分板团队
-                if (dummyTeam != null) {
-                    dummyTeam.setPrefix(dummyName + ": " + dummyCount + " ");
-                }
-
-                // 更新所有在线玩家的计分板，以确保他们看到最新的假人信息
                 Bukkit.getOnlinePlayers().forEach(player -> {
                     player.setScoreboard(scoreboard);
                 });
             }
-        }.runTaskTimer(plugin, 0L, 20L * 60L); // 每分钟更新一次
+        }.runTaskTimer(plugin, 0L, 20L * 60L);
     }
-
 
     public int getDummyCount() {
         return dummies.size();
     }
-
 }

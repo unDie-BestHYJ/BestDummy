@@ -26,29 +26,50 @@ public class BestDummyCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length != 1) {
+        if (args.length < 1) {
             sender.sendMessage("用法: /bestdummy <假人英文id>");
             return true;
         }
 
         Player player = (Player) sender;
-        // null: 第一个参数（transparent）通常是一个 Set<Material>，用于指定视线中可以穿透的方块。如果传入 null，表示没有特别指定的可穿透方块，默认行为是允许穿透所有方块。
-        // 100: 第二个参数（maxDistance）是一个整数，表示从玩家视线起点开始，最多可以检测的距离。这里设置为 100，表示最多检测 100 个方块距离内的方块。
-        Block targetBlock = player.getTargetBlock(null, 100);
-        Location targetLocation = targetBlock.getLocation().add(0, 1, 0);
-
-        if (targetBlock.getType() == Material.AIR) {
-            player.sendMessage("请指向一个方块");
-            return true;
-        }
-
         DummyManager dummyManager = plugin.getDummyManager();
-        ArmorStand dummy = dummyManager.createDummy(args[0], targetLocation, player.getName());
 
-        if (dummy != null) {
-            player.sendMessage("假人 " + args[0] + " 已生成");
-        } else {
-            player.sendMessage("假人生成失败");
+        switch (args[0].toLowerCase()) {
+            case "remove":
+                if (args.length < 2) {
+                    player.sendMessage("用法: /bestdummy remove <假人英文id>");
+                    return true;
+                }
+                boolean removed = dummyManager.removeDummy(args[1]);
+                if (removed) {
+                    player.sendMessage("假人 " + args[1] + " 已删除");
+                } else {
+                    player.sendMessage("假人 " + args[1] + " 不存在");
+                }
+                break;
+
+            case "all":
+                dummyManager.removeAllDummies();
+                player.sendMessage("所有假人已删除");
+                break;
+
+            default:
+                Block targetBlock = player.getTargetBlock(null, 100);
+                Location targetLocation = targetBlock.getLocation().add(0, 1, 0);
+
+                if (targetBlock.getType() == Material.AIR) {
+                    player.sendMessage("请指向一个方块");
+                    return true;
+                }
+
+                ArmorStand dummy = dummyManager.createDummy(args[0], targetLocation, player.getName());
+
+                if (dummy != null) {
+                    player.sendMessage("假人 " + args[0] + " 已生成");
+                } else {
+                    player.sendMessage("假人生成失败");
+                }
+                break;
         }
 
         return true;
