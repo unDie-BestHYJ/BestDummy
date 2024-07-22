@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BestDummy">
+    <output-path>$PROJECT_DIR$/out/artifacts/BestDummy</output-path>
+    <root id="archive" name="BestDummy.jar">
+      <element id="module-output" name="BestDummy" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/plugin.yml" />
+    </root>
+  </artifact>
+</component>

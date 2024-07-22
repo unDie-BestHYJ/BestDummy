@@ -1,0 +1,13 @@
+name: BestDummy
+version: 1.0
+main: com.plugins.bestdummy.BestDummy
+api-version: 1.12
+commands:
+  bestdummy:
+    description: 生成一个假人
+    usage: /bestdummy <假人英文id>
+    permission: bestdummy.use
+permissions:
+  bestdummy.use:
+    description: 允许玩家使用 /bestdummy 指令
+    default: true
