@@ -6,9 +6,9 @@ commands:
   bestdummy:
     description: 生成或管理假人
     usage: |
-      /bestdummy <假人英文id> - 生成一个假人
+      /bestdummy create <假人英文id> - 生成一个假人
       /bestdummy remove <假人英文id> - 删除一个假人
-      /bestdummy all - 删除所有假人
+      /bestdummy removeall - 删除所有假人
     permission: bestdummy.use
 permissions:
   bestdummy.use:

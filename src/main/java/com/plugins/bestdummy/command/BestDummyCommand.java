@@ -27,7 +27,7 @@ public class BestDummyCommand implements CommandExecutor {
         }
 
         if (args.length < 1) {
-            sender.sendMessage("用法: /bestdummy <假人英文id>");
+            sender.sendMessage("用法: /bestdummy <subcommand> <其它参数>");
             return true;
         }
 
@@ -35,6 +35,27 @@ public class BestDummyCommand implements CommandExecutor {
         DummyManager dummyManager = plugin.getDummyManager();
 
         switch (args[0].toLowerCase()) {
+            case "create":
+                if (args.length < 2) {
+                    player.sendMessage("用法: /bestdummy create <假人英文id>");
+                    return true;
+                }
+
+                Block targetBlock = player.getTargetBlock(null, 100);
+                if (targetBlock.getType() == Material.AIR) {
+                    player.sendMessage("请指向一个方块");
+                    return true;
+                }
+
+                ArmorStand dummy = dummyManager.createDummy(args[1], targetBlock.getLocation(), player.getName());
+
+                if (dummy != null) {
+                    player.sendMessage("假人 " + args[1] + " 已生成");
+                } else {
+                    player.sendMessage("假人 " + args[1] + " 已存在, 生成失败");
+                }
+                break;
+
             case "remove":
                 if (args.length < 2) {
                     player.sendMessage("用法: /bestdummy remove <假人英文id>");
@@ -48,27 +69,13 @@ public class BestDummyCommand implements CommandExecutor {
                 }
                 break;
 
-            case "all":
+            case "removeall":
                 dummyManager.removeAllDummies();
                 player.sendMessage("所有假人已删除");
                 break;
 
             default:
-                Block targetBlock = player.getTargetBlock(null, 100);
-                Location targetLocation = targetBlock.getLocation().add(0, 1, 0);
-
-                if (targetBlock.getType() == Material.AIR) {
-                    player.sendMessage("请指向一个方块");
-                    return true;
-                }
-
-                ArmorStand dummy = dummyManager.createDummy(args[0], targetLocation, player.getName());
-
-                if (dummy != null) {
-                    player.sendMessage("假人 " + args[0] + " 已生成");
-                } else {
-                    player.sendMessage("假人生成失败");
-                }
+                player.sendMessage("未知子命令。用法: /bestdummy <create|remove|removeall>");
                 break;
         }
 
